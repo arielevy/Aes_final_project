@@ -20,7 +20,7 @@ if (reset = '1') then Data_OUT<=x"00";
 
 elsif (clock'event and clock ='1') then
 
-case Data_IN is
+case Data_IN is -- make look uo table
 			when "00000000"=>Data_OUT<=x"63";
 			when "00000001"=>Data_OUT<=x"7c";
 			when "00000010"=>Data_OUT<=x"77";

@@ -8,6 +8,7 @@ Data_IN :in std_logic_vector (127 downto 0); -- Data in
 Clock : in std_logic; --Clock in
 reset : in std_logic;
 Key : in std_logic_vector (127 downto 0); -- Key in
+last_round : in std_logic;
 Data_OUT : out std_logic_vector (127 downto 0) --Data out
 );
 end Encryptor_4Rounds;
@@ -42,6 +43,7 @@ end component Shift_rows;
 signal Bwire : std_logic_vector (127 downto 0); -- the wire after the sbox128
 signal Cwire : std_logic_vector (127 downto 0); -- the wire after the Shift_rows;
 signal Dwire : std_logic_vector (127 downto 0); -- the wire after the Mix_Column;
+signal Ewire : std_logic_vector (127 downto 0); -- the wire after the Mix_Column;
 
 begin
 
@@ -52,5 +54,9 @@ MiX2 : Mix_Column port map(Cwire(95 downto 64),Clock,reset,Dwire (95 downto 64))
 MiX1 : Mix_Column port map(Cwire(63 downto 32),Clock,reset,Dwire (63 downto 32));
 MiX0 : Mix_Column port map(Cwire(31 downto 0),Clock,reset,Dwire (31 downto 0));
 
-Data_OUT <= Key XOR Dwire;
+
+Ewire <=Dwire when last_round='0' else
+		  Cwire when last_round='1';
+
+Data_OUT <= Key Xor Ewire;
 end architecture;

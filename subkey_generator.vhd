@@ -14,47 +14,41 @@ end subkey_generator;
 
 architecture Behav of subkey_generator is
 
-signal W0 : std_logic_vector (7 downto 0);
-signal W1 : std_logic_vector (7 downto 0); 
-signal W2 : std_logic_vector (7 downto 0);
-signal W3 : std_logic_vector (7 downto 0);
-signal W4 : std_logic_vector (7 downto 0);
-signal W5 : std_logic_vector (7 downto 0); 
-signal W6 : std_logic_vector (7 downto 0);
-signal W7 : std_logic_vector (7 downto 0);
-signal temp : std_logic_vector (7 downto 0);
-signal Rcon : std_logic_vector (31 downto 0);
+signal wire1 : std_logic_vector (127 downto 0);
+signal wire2 : std_logic_vector (127 downto 0);
+
+component SBox32_key is
+port(
+Data_IN :in std_logic_vector (127 downto 0); -- Data in
+Clock : in std_logic; --Clock in
+reset : in std_logic;
+Data_OUT : out std_logic_vector (127 downto 0) --Data out
+);
+end component;
+
+component Shift_rows_key is
+Port(
+ Key_in : in  STD_LOGIC_VECTOR (127 downto 0);
+ Key_out : out  STD_LOGIC_VECTOR (127 downto 0)
+);
+end component;
+
+component Rcon_adder is
+port(
+Key_IN :in std_logic_vector (127 downto 0); -- Data in
+W3_org : in std_logic_vector (31 downto 0);
+Clock : in std_logic; --Clock in
+reset : in std_logic;
+Rcon_index: in std_logic_vector (3 downto 0);
+Key_OUT : out std_logic_vector (127 downto 0) --Data out
+);
+end component;
+
 
 begin
-	w0<=Key_IN (31 downto 0);
-	w1<=Key_IN (63 downto 32);
-	w2<=Key_IN (95 downto 64);
-	w3<=Key_IN (127 downto 96);
-	temp<=Key_IN (103 downto 96) &  Key_IN (127 downto 104);
- process
-	
- begin
-	if (reset='1') then Key_out<=x"00000000000000000000000000000000";
-							  Rcon<=x"00000000";
-	elsif (clock'event and clock='0') then
-			if (Rcon_index="0001") then Rcon<=x"00000001";
-			elsif	(Rcon_index="0010") then Rcon<=x"00000002";
-			elsif	(Rcon_index="0011") then Rcon<=x"00000004";
-			elsif	(Rcon_index="0100") then Rcon<=x"00000008";
-			elsif	(Rcon_index="0101") then Rcon<=x"00000010";
-			elsif	(Rcon_index="0110") then Rcon<=x"00000020";
-			elsif	(Rcon_index="0111") then Rcon<=x"00000040";
-			elsif	(Rcon_index="1000") then Rcon<=x"00000080";
-			elsif	(Rcon_index="1001") then Rcon<=x"0000001B";
-			elsif	(Rcon_index="1010") then Rcon<=x"00000036";
-			end if;
-		W4<= W0 xor Rcon xor temp;
-		W5<= W1 xor W4;
-		W6<= W2 xor W5;
-		W7<= W3 xor W6;
-	end if;
- end process;
 
- Key_out<=W7&W6&W5&W4;
+	shift :Shift_rows_key port map(Key_IN,wire1);
+	s01   :SBox32_key port map (wire1,Clock,reset,wire2);
+	Rcon_a:Rcon_adder port map (wire2,Key_IN (127 downto 96),Clock,reset,Rcon_index,Key_out);
  
 end architecture;
